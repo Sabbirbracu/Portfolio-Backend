@@ -5,8 +5,10 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
+    "build": "echo \"No build step required for this backend service\"",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
+    "test": "node --test",
     "seed": "node src/scripts/seed.js",
     "migrate": "node src/scripts/migrateProjects.js",
     "migrate:media": "node src/scripts/migrateMediaToR2.js",

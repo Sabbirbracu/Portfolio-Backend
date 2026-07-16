@@ -25,6 +25,10 @@ if (process.env.NODE_ENV !== "production") {
   app.use(morgan("dev"));
 }
 
+app.get("/", (req, res) => {
+  res.json({ success: true, message: "Sabbir's backend API is running" });
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ success: true, message: "API is running" });
 });

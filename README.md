@@ -57,6 +57,11 @@ All responses use `{ success, message, data }` (except `GET /api/auth/verify`, w
 | PATCH | `/api/contact/:id/status` | Bearer token — `new` / `read` / `replied` |
 | DELETE | `/api/contact/:id` | Bearer token |
 
+### Media (Cloudflare R2)
+| Method | Route | Access |
+|---|---|---|
+| POST | `/api/media` | Bearer token — multipart `files` fields (≤10 files, 25MB each, images/mp4/webm/pdf), optional `folder`; returns public R2 URLs |
+
 ## Notes
 
 - The `Project` model mirrors `src/types/project.ts` in the frontend, including nested `media`, `links`, `techStack`, `caseStudy`, and `meta` blocks. JSON output maps `_id` → `id` to match the frontend types.
