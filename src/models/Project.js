@@ -14,6 +14,18 @@ const PROJECT_TYPES = [
   "open-source",
 ];
 
+// Reusable sub-documents for the in-depth case-study blocks
+const sub = (fields) => new mongoose.Schema(fields, { _id: false });
+
+const PairSchema = sub({ problem: String, solution: String });
+const MetricSchema = sub({ value: String, label: String });
+const StepSchema = sub({ title: String, body: String });
+const ComponentSchema = sub({ name: String, detail: String });
+const NoteSchema = sub({ title: String, body: [String] });
+const DeepDiveSchema = sub({ title: String, paragraphs: [String] });
+const TradeoffSchema = sub({ decision: String, alternative: String, rationale: String });
+const BlockSchema = sub({ intro: String, points: [String] });
+
 const projectSchema = new mongoose.Schema(
   {
     slug: {
@@ -44,6 +56,7 @@ const projectSchema = new mongoose.Schema(
     },
     links: {
       live: String,
+      clientSite: String, // client's own production site, when it differs from the delivered build
       github: String,
       documentation: String,
       researchPaper: String,
@@ -73,10 +86,48 @@ const projectSchema = new mongoose.Schema(
       solution: String,
       features: [String],
       architecture: String,
-      challenges: [new mongoose.Schema({ problem: String, solution: String }, { _id: false })],
+      challenges: [PairSchema],
       contribution: [String],
       outcome: String,
       learnings: [String],
+
+      // ---- In-depth case-study blocks (all optional; render only if present) ----
+      showcaseNote: String, // e.g. explaining a delivered-build URL vs client production URL
+
+      executiveSummary: BlockSchema, // { intro, points[] }
+      keyMetrics: [MetricSchema], // headline stat strip
+
+      context: [String], // narrative paragraphs
+
+      challengeIntro: String,
+      challengePoints: [String],
+
+      constraints: [String],
+
+      approachIntro: String,
+      approachSteps: [StepSchema],
+      approachOutro: String,
+
+      architectureIntro: String,
+      architectureComponents: [ComponentSchema],
+      architectureOutro: String,
+      architectureNotes: [NoteSchema], // e.g. "Access model: 2 roles, 4 tiers"
+
+      deepDives: [DeepDiveSchema], // "Problems solved" — rich multi-paragraph sections
+
+      tradeoffs: [TradeoffSchema], // decision / alternative / rationale
+
+      security: BlockSchema,
+      deployment: BlockSchema,
+
+      results: sub({
+        metrics: [sub({ label: String, value: String })],
+        modulesNote: String,
+        businessImpact: [String],
+      }),
+
+      improvements: [String], // "What I'd do differently"
+      reflection: [String], // closing paragraphs
     },
     meta: {
       featured: { type: Boolean, default: false },

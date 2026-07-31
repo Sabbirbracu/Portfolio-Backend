@@ -12,7 +12,10 @@
     "seed": "node src/scripts/seed.js",
     "migrate": "node src/scripts/migrateProjects.js",
     "migrate:media": "node src/scripts/migrateMediaToR2.js",
-    "migrate:articles": "node src/scripts/migrateArticles.js"
+    "migrate:articles": "node src/scripts/migrateArticles.js",
+    "migrate:webp": "node src/scripts/optimizeMediaWebp.js",
+    "update:shaadimart": "node src/scripts/updateShaadimartCaseStudy.js",
+    "enrich:casestudies": "node src/scripts/enrichCaseStudies.js"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1087.0",
