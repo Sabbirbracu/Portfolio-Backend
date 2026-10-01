@@ -1,0 +1,70 @@
+name: CI / Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+  deploy:
+    needs: test
+    # Only deploy pushes to main (never PRs).
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      REMOTE_DIR: /opt/portfolio-api
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH
+        run: |
+          install -m 700 -d ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.VPS_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Sync code to VPS
+        run: |
+          SSH="ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes"
+          rsync -az --delete -e "$SSH" \
+            --exclude .git --exclude .github --exclude node_modules \
+            --exclude test --exclude deploy --exclude '.env*' \
+            ./ "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$REMOTE_DIR/app/"
+          rsync -az -e "$SSH" deploy/docker-compose.yml \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:$REMOTE_DIR/docker-compose.yml"
+
+      - name: Build, restart and verify
+        run: |
+          ssh -i ~/.ssh/id_deploy -o IdentitiesOnly=yes \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" bash -s <<'REMOTE'
+          set -euo pipefail
+          cd /opt/portfolio-api
+          docker compose up -d --build
+          for i in $(seq 1 30); do
+            if docker exec portfolio-api wget -qO- http://127.0.0.1:5001/api/health >/dev/null 2>&1; then
+              echo "Healthy after ${i}x2s"; exit 0
+            fi
+            sleep 2
+          done
+          echo "Health check failed"; docker compose logs --tail 50; exit 1
+          REMOTE
+
+      - name: Public health check
+        run: curl -fsS https://api.bysabbir.com/api/health

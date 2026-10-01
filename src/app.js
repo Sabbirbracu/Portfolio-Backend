@@ -13,6 +13,9 @@ import projectRoutes from "./routes/projectRoutes.js";
 
 const app = express();
 
+// Behind nginx (and optionally Cloudflare): trust the first proxy hop so req.ip / rate limiting see real client IPs.
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(
   cors({

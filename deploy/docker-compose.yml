@@ -1,0 +1,25 @@
+# Lives at /opt/portfolio-api on the VPS. Separate compose project from pharma-erp.
+# Joins pharma-erp's existing network ONLY so its nginx container can reach us by name.
+# No host ports are published.
+name: portfolio-api
+
+services:
+  portfolio-api:
+    build: ./app
+    image: portfolio-api:latest
+    container_name: portfolio-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "5001"
+    expose:
+      - "5001"
+    mem_limit: 512m
+    networks:
+      - pharma
+
+networks:
+  pharma:
+    external: true
+    name: pharma-erp_default
