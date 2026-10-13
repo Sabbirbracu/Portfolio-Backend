@@ -1,6 +1,8 @@
 import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import Admin from "../models/Admin.js";
+import { passwordChangedEmail, passwordResetEmail } from "../services/emailTemplates.js";
+import { isMailConfigured, sendMail, siteUrl } from "../services/mailer.js";
 import AppError from "../utils/AppError.js";
 
 const signToken = (id) =>
@@ -72,10 +74,17 @@ export const forgotPassword = async (req, res, next) => {
       const rawToken = admin.createResetToken();
       await admin.save();
 
-      // No mail service wired up yet — log the reset link so it can be used manually.
-      // Swap this for an email send (Resend, Nodemailer, etc.) before production.
-      const resetUrl = `${process.env.CLIENT_URL || "http://localhost:8080"}/admin/reset-password?token=${rawToken}`;
-      console.log(`Password reset link for ${admin.email}: ${resetUrl}`);
+      const resetUrl = `${siteUrl()}/admin/reset-password?token=${rawToken}`;
+
+      // Local development without a Resend key: print the link so the flow stays testable.
+      // Never in production — the token is a credential and must not end up in logs.
+      if (!isMailConfigured() && process.env.NODE_ENV !== "production") {
+        console.log(`[dev] Password reset link for ${admin.email}: ${resetUrl}`);
+      }
+
+      // Deliberately not awaited: the response must take the same time whether or not the
+      // account exists, otherwise response timing leaks which emails are registered.
+      void sendMail({ to: admin.email, ...passwordResetEmail({ name: admin.name, resetUrl }) });
     }
 
     // Always the same response, so emails can't be enumerated
@@ -110,6 +119,8 @@ export const resetPassword = async (req, res, next) => {
     admin.resetPasswordToken = undefined;
     admin.resetPasswordExpires = undefined;
     await admin.save();
+
+    void sendMail({ to: admin.email, ...passwordChangedEmail({ name: admin.name }) });
 
     res.json({ success: true, message: "Password has been reset. You can now log in." });
   } catch (err) {

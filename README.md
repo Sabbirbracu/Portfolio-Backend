@@ -45,6 +45,10 @@ All responses use `{ success, message, data }` (except `GET /api/auth/verify`, w
 | GET | `/api/projects` | public (`?type=fullstack`, `?featured=true`) |
 | GET | `/api/projects/:slug` | public |
 | POST / PUT `/:id` / DELETE `/:id` | `/api/projects` | Bearer token |
+| PUT | `/api/projects/order` | Bearer token — `{ ids: [...] }` saves the drag-and-drop display order (`meta.order`) used by the homepage and All Projects page |
+| POST | `/api/projects/generate` | Bearer token — `{ notes }` → unsaved AI-generated project draft (needs `ANTHROPIC_API_KEY`; 20/hour) |
+
+`GET /api/projects` hides `visibility: "private"` projects from the public; the admin panel passes `?includeHidden=true` with its token to see them. Projects are returned in the admin's drag-and-drop order (`meta.order`, then newest). The homepage "Selected Work" section is the `?featured=true` subset of that same order; new projects are appended to the end.
 | GET | `/api/articles` | public |
 | GET | `/api/articles/:slug` | public |
 | POST / PUT `/:id` / DELETE `/:id` | `/api/articles` | Bearer token |
@@ -61,6 +65,20 @@ All responses use `{ success, message, data }` (except `GET /api/auth/verify`, w
 | Method | Route | Access |
 |---|---|---|
 | POST | `/api/media` | Bearer token — multipart `files` fields (≤10 files, 25MB each, images/mp4/webm/pdf), optional `folder`; returns public R2 URLs |
+
+## Email (Resend)
+
+Password reset, "password changed" confirmations and contact-form notifications are sent through [Resend](https://resend.com) (`src/services/mailer.js`, templates in `src/services/emailTemplates.js`). Set in `.env`:
+
+| Variable | Purpose |
+|---|---|
+| `RESEND_API_KEY` | Resend API key. Without it mail is skipped (logged), never crashes a request. |
+| `MAIL_FROM` | Sender, e.g. `Sabbir Ahmad <noreply@bysabbir.com>` — must be on a domain verified in Resend. |
+| `MAIL_NOTIFY_TO` | Inbox that receives "new contact message" notifications (Reply-To is set to the visitor). |
+| `MAIL_REPLY_TO` | Optional Reply-To on system mail, e.g. `hello@bysabbir.com`. |
+| `SITE_URL` | Public frontend URL used in email links (falls back to the first `CLIENT_URL`). |
+
+Emails are sent fire-and-forget so a mail outage never fails the request, and so `forgot-password` responds in the same time whether or not the account exists.
 
 ## Notes
 

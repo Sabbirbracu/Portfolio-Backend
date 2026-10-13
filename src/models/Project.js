@@ -25,6 +25,16 @@ const NoteSchema = sub({ title: String, body: [String] });
 const DeepDiveSchema = sub({ title: String, paragraphs: [String] });
 const TradeoffSchema = sub({ decision: String, alternative: String, rationale: String });
 const BlockSchema = sub({ intro: String, points: [String] });
+// One stage of the end-to-end lifecycle diagram. `ai` / `human` mark where automation helps and where a person decides.
+const WorkflowStageSchema = sub({
+  title: String,
+  detail: String,
+  track: { type: String, enum: ["sourcing", "finance"], default: "sourcing" },
+  ai: Boolean,
+  human: Boolean,
+});
+// One captioned screenshot of the product tour. Empty images are skipped on the site.
+const ScreenSchema = sub({ title: String, caption: String, image: String });
 
 const projectSchema = new mongoose.Schema(
   {
@@ -99,6 +109,11 @@ const projectSchema = new mongoose.Schema(
 
       context: [String], // narrative paragraphs
 
+      workflow: sub({ intro: String, stages: [WorkflowStageSchema], outro: String }), // lifecycle diagram
+
+      screensIntro: String,
+      screens: [ScreenSchema], // captioned product-tour screenshots
+
       challengeIntro: String,
       challengePoints: [String],
 
@@ -130,7 +145,8 @@ const projectSchema = new mongoose.Schema(
       reflection: [String], // closing paragraphs
     },
     meta: {
-      featured: { type: Boolean, default: false },
+      featured: { type: Boolean, default: false }, // true = shown in the homepage "Selected Work" section
+      order: { type: Number, default: 0 }, // position within the homepage selection (ascending)
       tags: [String],
       company: String,
       location: String,

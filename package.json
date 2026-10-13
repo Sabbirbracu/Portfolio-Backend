@@ -11,13 +11,17 @@
     "test": "node --test",
     "seed": "node src/scripts/seed.js",
     "migrate": "node src/scripts/migrateProjects.js",
+    "seed:home": "node src/scripts/seedHomeSelection.js",
+    "seed:blog": "node src/scripts/seedBlogPosts.js",
     "migrate:media": "node src/scripts/migrateMediaToR2.js",
     "migrate:articles": "node src/scripts/migrateArticles.js",
     "migrate:webp": "node src/scripts/optimizeMediaWebp.js",
     "update:shaadimart": "node src/scripts/updateShaadimartCaseStudy.js",
+    "add:pharma-erp": "node src/scripts/addPharmaErpCaseStudy.js",
     "enrich:casestudies": "node src/scripts/enrichCaseStudies.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@aws-sdk/client-s3": "^3.1087.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -28,6 +32,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
-    "multer": "^2.2.0"
+    "multer": "^2.2.0",
+    "resend": "^6.32.1"
   }
 }

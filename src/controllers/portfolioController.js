@@ -5,9 +5,9 @@ import Project from "../models/Project.js";
 export const getPortfolio = async (req, res, next) => {
   try {
     const [featuredProjects, latestArticles, projectCount, articleCount] = await Promise.all([
-      Project.find({ "meta.featured": true }).sort({ year: -1 }).limit(6),
+      Project.find({ "meta.featured": true, visibility: { $ne: "private" } }).sort({ "meta.order": 1, createdAt: -1 }).limit(6),
       Article.find({ published: true }).sort({ createdAt: -1 }).limit(3),
-      Project.countDocuments(),
+      Project.countDocuments({ visibility: { $ne: "private" } }),
       Article.countDocuments({ published: true }),
     ]);
 
